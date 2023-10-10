@@ -1,0 +1,10 @@
+172.31.0.3 -  09/Oct/2023:14:23:59 +0000 "GET /index.php" 200
+172.31.0.3 -  09/Oct/2023:14:24:03 +0000 "GET /index.php" 200
+[09-Oct-2023 14:24:55] NOTICE: [pool www] child 16 started
+[09-Oct-2023 14:24:55] WARNING: [pool www] child 14 exited on signal 9 (SIGKILL) after 2443.317906 seconds from start
+172.31.0.3 -  09/Oct/2023:14:25:08 +0000 "GET /index.php" 500
+172.31.0.3 -  09/Oct/2023:14:25:17 +0000 "GET /index.php" 200
+172.31.0.3 -  09/Oct/2023:14:26:12 +0000 "GET /index.php" 500
+[09-Oct-2023 15:24:55] WARNING: [pool www] child 16 exited on signal 9 (SIGKILL) after 2443.317906 seconds from start
+172.31.0.3 -  09/Oct/2023:14:26:32 +0000 "GET /index.php" 200
+172.31.0.3 -  09/Oct/2023:14:26:53 +0000 "GET /index.php" 200
