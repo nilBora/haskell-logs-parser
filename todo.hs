@@ -3,11 +3,26 @@ import System.Directory
 import System.FilePath
 import Control.Monad
 import System.IO
+import System.Environment
+import System.Exit
+
 
 main :: IO ()
 main = do
-    files <- getRecursiveContents "./scan"
-    mapM_ checkFile files
+    args <- getArgs
+
+    if length args /= 1
+        then do
+            putStrLn "Usage: todo <directory>"
+            exitFailure
+        else do
+            let dir = head args
+            files <- getRecursiveContents dir
+            mapM_ checkFile files
+            --setCurrentDirectory dir
+
+    --files <- getRecursiveContents getCurrentDidirrectory
+    
 
 getRecursiveContents :: FilePath -> IO [FilePath]
 getRecursiveContents topdir = do
@@ -24,11 +39,20 @@ getRecursiveContents topdir = do
 
 checkFile :: String -> IO ()
 checkFile file = do
-    putStrLn $ "Checking file: " ++ file
     content <- readFile $ file
     let linesOfFile = lines content
     let fileLinesWithIndex = zip [1..] linesOfFile
     let fileLinesWithIndexFiltered = filter (\(i, line) -> "TODO" `isInfixOf` line) fileLinesWithIndex 
-    let fileLinesWithIndexFilteredMapped = map (\(i, line) -> (i, dropWhile (/= 'T') line)) fileLinesWithIndexFiltered
-   
-    mapM_ print fileLinesWithIndexFilteredMapped
+    --let fileLinesWithIndexFilteredMapped = map (\(i, line) -> (i, dropWhile (/= 'T') line)) fileLinesWithIndexFiltered
+    let fileLinesWithIndexFilteredMapped = map (\(i, line) -> (i, removeBeforeTodo line)) fileLinesWithIndexFiltered
+    if length fileLinesWithIndexFilteredMapped == 0
+        then return ()
+        else do
+            putStrLn $ "Checking file: " ++ file
+            mapM_ print fileLinesWithIndexFilteredMapped
+
+
+removeBeforeTodo :: String -> String
+removeBeforeTodo input = case dropWhile (not . isPrefixOf "//TODO") (tails input) of
+    (rest:_) -> rest
+    _ -> input
