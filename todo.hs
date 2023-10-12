@@ -29,13 +29,6 @@ checkFile file = do
     let linesOfFile = lines content
     let fileLinesWithIndex = zip [1..] linesOfFile
     let fileLinesWithIndexFiltered = filter (\(i, line) -> "TODO" `isInfixOf` line) fileLinesWithIndex 
-    let fileLinesWithIndexFilteredMapped = map (\(i, line) -> (i, (words line) !! 1)) fileLinesWithIndexFiltered
-    let fileLinesWithIndexFilteredMappedSorted = sortOn snd fileLinesWithIndexFilteredMapped
-    let fileLinesWithIndexFilteredMappedSortedMapped = map (\(i, line) -> (i, "TODO: " ++ line)) fileLinesWithIndexFilteredMappedSorted
-    let fileLinesWithIndexFilteredMappedSortedMappedWithIndex = map (\(i, line) -> (show i) ++ " - " ++ line) fileLinesWithIndexFilteredMappedSortedMapped   
+    let fileLinesWithIndexFilteredMapped = map (\(i, line) -> (i, dropWhile (/= 'T') line)) fileLinesWithIndexFiltered
    
-    mapM_ print fileLinesWithIndexFiltered
     mapM_ print fileLinesWithIndexFilteredMapped
-    mapM_ print fileLinesWithIndexFilteredMappedSorted
-    mapM_ print fileLinesWithIndexFilteredMappedSortedMapped
-    mapM_ print fileLinesWithIndexFilteredMappedSortedMappedWithIndex
