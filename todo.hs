@@ -1,27 +1,31 @@
 import Data.List
 import System.Directory
---import Data.String
+import System.FilePath
+import Control.Monad
+import System.IO
 
 main :: IO ()
 main = do
-    -- scan folder with files
-    directory <- getDirectoryContents "./scan"
-    let files = filter (\file -> ".log" `isSuffixOf` file) directory
-    let filesWithIndex = zip [1..] files
-    let filesWithIndexMapped = map (\(i, file) -> (show i) ++ " - " ++ file) filesWithIndex
-    mapM_ print filesWithIndexMapped
-
+    files <- getRecursiveContents "./scan"
     mapM_ checkFile files
+
+getRecursiveContents :: FilePath -> IO [FilePath]
+getRecursiveContents topdir = do
+    names <- getDirectoryContents topdir
+    let properNames = filter (`notElem` [".", ".."]) names
+    paths <- forM properNames $ \name -> do
+        let path = topdir </> name
+        isDirectory <- doesDirectoryExist path
+        if isDirectory
+            then getRecursiveContents path
+            else return [path]
+    return (concat paths)
     
-
-
-
-
 
 checkFile :: String -> IO ()
 checkFile file = do
     putStrLn $ "Checking file: " ++ file
-    content <- readFile $ "./scan/" ++ file
+    content <- readFile $ file
     let linesOfFile = lines content
     let fileLinesWithIndex = zip [1..] linesOfFile
     let fileLinesWithIndexFiltered = filter (\(i, line) -> "TODO" `isInfixOf` line) fileLinesWithIndex 
@@ -29,23 +33,6 @@ checkFile file = do
     let fileLinesWithIndexFilteredMappedSorted = sortOn snd fileLinesWithIndexFilteredMapped
     let fileLinesWithIndexFilteredMappedSortedMapped = map (\(i, line) -> (i, "TODO: " ++ line)) fileLinesWithIndexFilteredMappedSorted
     let fileLinesWithIndexFilteredMappedSortedMappedWithIndex = map (\(i, line) -> (show i) ++ " - " ++ line) fileLinesWithIndexFilteredMappedSortedMapped   
-
-
-    -- let linesOfFileWithIndexMapped = map (\(i, line) -> (show i) ++ " - " ++ line) linesOfFileWithIndex
-    -- mapM_ print linesOfFileWithIndexMapped
-    -- putStrLn "-------------------"
-    -- putStrLn "-------------------"
-    -- putStrLn "---------------"
-    -- checkFile fileInput = do
-    -- let fileInput = "./scan/" ++ fileInput
-    -- file <- readFile fileInput
-    -- let fileLines = lines file
-    -- let fileLinesWithIndex = zip [1..] fileLines
-    -- let fileLinesWithIndexFiltered = filter (\(i, line) -> "TODO" `isInfixOf` line) fileLinesWithIndex
-    -- let fileLinesWithIndexFilteredMapped = map (\(i, line) -> (i, (words line) !! 1)) fileLinesWithIndexFiltered
-    -- let fileLinesWithIndexFilteredMappedSorted = sortOn snd fileLinesWithIndexFilteredMapped
-    -- let fileLinesWithIndexFilteredMappedSortedMapped = map (\(i, line) -> (i, "TODO: " ++ line)) fileLinesWithIndexFilteredMappedSorted
-    -- let fileLinesWithIndexFilteredMappedSortedMappedWithIndex = map (\(i, line) -> (show i) ++ " - " ++ line) fileLinesWithIndexFilteredMappedSortedMapped
    
     mapM_ print fileLinesWithIndexFiltered
     mapM_ print fileLinesWithIndexFilteredMapped
