@@ -9,35 +9,41 @@ import Data.Char
 import Options.Applicative
 
 data Options = Options
-  { dir :: FilePath
+  { 
+    dir :: FilePath,
+    label :: [String]
   }
 
 optionsParser :: Parser Options
 optionsParser = Options
-  <$> strOption
-      ( long "dir"
-     <> metavar "DIRECTORY"
-     <> help "Directory to scan" )
+    <$> strOption
+        ( long "dir"
+        <> metavar "DIRECTORY"
+        <> help "Directory to scan" )
+    <*> many (strOption
+        ( long "label"
+            <> metavar "LABEL"
+            <> help "Label to scan for"
+ ))
 
 main :: IO ()
 main = do
     options <- execParser opts
     let dirToScan = dir options
     putStrLn $ "Scanning directory: " ++ dirToScan
-    --args <- getArgs
 
-    -- if length args /= 1
-    --     then do
-    --         putStrLn "Usage: todo <directory>"
-    --         exitFailure
-    --     else do
-    --let dir = head dirToScan
+    let labels = if length (label options) == 0 then getLabels else label options
+
     files <- getRecursiveContents dirToScan
-    --mapM_ checkFile files
-    let totalTODOs = sum <$> mapM checkFile files
-    total <- totalTODOs
 
-    let msg = "Total TODOs: " ++ show total
+    total <- foldM (\acc file -> do
+        count <- checkFile file labels
+        return (acc + count)) 0 files
+
+    --let totalTODOs = sum <$> mapM checkFile files labels
+    --total <- totalTODOs
+
+    let msg = "Found " ++ show total ++ " TODOs"
     let lengthSpaces = (length msg) + 2
 
     if total == 0 then do
@@ -73,32 +79,29 @@ getRecursiveContents topdir = do
                 else return []
     return (concat paths)
     
-
-checkFile :: String -> IO Int
-checkFile file = do
+checkFile :: FilePath -> [String] -> IO Int
+checkFile file labels = do
     content <- readFile $ file
     let linesOfFile = lines content
     let fileLinesWithIndex = zip [1..] linesOfFile
     let labels = getLabels
     let fileLinesWithIndexFiltered = filter (\(i, line) -> any (`isInfixOf` line) labels) fileLinesWithIndex
     let fileLinesWithIndexFilteredMapped = map (\(i, line) -> (i, removeBeforeLabels line)) fileLinesWithIndexFiltered
-    -- trim each line for fileLinesWithIndexFilteredMapped
-    --let fileLinesWithIndexFilteredMappedTrim = map (\(i, line) -> (i, dropWhile (/= 'T') line)) fileLinesWithIndexFilteredMapped
+    let fileLinesWithIndexFilteredMappedTrim = map (\(i, line) -> (i, dropWhile isSpace line)) fileLinesWithIndexFilteredMapped
     
-    if length fileLinesWithIndexFilteredMapped == 0
+    if length fileLinesWithIndexFilteredMappedTrim == 0
         then return 0
         else do
             putStrLn "------ --------------------------------------------------"    
             let msg = "Line: " ++ file
             putStrLn $ colorGreen msg
-            mapM_ putStrLn $ map (\(i, line) -> show i ++ "     " ++ line) fileLinesWithIndexFilteredMapped
+            mapM_ putStrLn $ map (\(i, line) -> show i ++ "     " ++ line) fileLinesWithIndexFilteredMappedTrim
             putStrLn "------ --------------------------------------------------"
-            let count = length fileLinesWithIndexFilteredMapped
+            let count = length fileLinesWithIndexFilteredMappedTrim
             return count
             
 getLabels :: [String]
 getLabels = ["TODO", "FIXME", "XXX"]
-
 
 colorGreen :: String -> String
 colorGreen input = "\x1b[32m" ++ input ++ "\x1b[0m"
@@ -108,9 +111,6 @@ colorRed input = "\x1b[31m" ++ input ++ "\x1b[0m"
 
 textWithBackground :: String -> String -> String
 textWithBackground color input = "\x1b[" ++ color ++ "m" ++ input ++ "\x1b[0m"
-
-textWithRedBackgroundColor :: String -> String
-textWithRedBackgroundColor input = textWithBackground "41" input
 
 textWithRedBackroundAndBorder :: String -> String
 textWithRedBackroundAndBorder input = textWithBackground "41;1;37" input
@@ -127,23 +127,12 @@ spacesWithRedBackground count = textWithBackground "41;1;37" (replicate count ' 
 spacesWithGreenBackground :: Int -> String
 spacesWithGreenBackground count = textWithBackground "42;1;37" (replicate count ' ')
 
-textWithRedBackgroundAndPaddingHeithBottomBorder :: String -> String
-textWithRedBackgroundAndPaddingHeithBottomBorder input = textWithBackground "41;1;37" (" " ++ input ++ " ") ++ "\n" ++ textWithBackground "41;1;37" "               "
-
--- remove text before labels (TODO, FIXME, XXX) vi get getLabels
-
 removeBeforeLabel :: String -> String -> String
 removeBeforeLabel input label = case dropWhile (not . isPrefixOf label) (tails input) of
     (rest:_) -> rest
     _ -> input
 
 removeBeforeLabels :: String -> String
-removeBeforeLabels input = --  use removeBeforeLabel for each label
+removeBeforeLabels input =
     let labels = getLabels
     in foldl (\acc label -> removeBeforeLabel acc label) input labels
-
-removeBeforeTodo :: String -> String
-removeBeforeTodo input = case dropWhile (not . isPrefixOf "TODO") (tails input) of
-    (rest:_) -> rest
-    _ -> input
-    
