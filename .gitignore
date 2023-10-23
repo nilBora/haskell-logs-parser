@@ -1,6 +1,4 @@
-*.hi
-*.o
-logs_parser
-scan/*
-./vscode/*
-todo
+dist-newstyle/*
+.vscode/*
+log.txt
+

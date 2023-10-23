@@ -1,3 +1,5 @@
+module Main where
+
 import Data.List
 import Data.String
 
@@ -19,8 +21,3 @@ main = do
     mapM_ print logLinesWithIndexFiltered
     --print logLinesWithIndexFiltered
     print logLinesWithIndexFilteredMapped
-
-    putStrLn(doSomething "Hello" "World")
-
-doSomething :: String -> String -> String
-doSomething a b = a ++ " " ++ b
