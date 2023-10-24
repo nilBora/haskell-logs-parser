@@ -2,22 +2,18 @@ module Main where
 
 import Data.List
 import Data.String
+import Control.Monad (forM_)
 
 main :: IO ()
 main = do
     log <- readFile "log.txt"
     let logLines = lines log
     let logLinesWithIndex = zip [0..] logLines
-    let logLinesWithIndexFiltered = filter (\(i, line) -> "WARNING" `isInfixOf` line) logLinesWithIndex
-    let logLinesWithIndexFilteredMapped = map (\(i, line) -> (i, (words line) !! 1)) logLinesWithIndexFiltered
-    let logLinesWithIndexFilteredMappedSorted = sortOn snd logLinesWithIndexFilteredMapped
-    let logLinesWithIndexFilteredMappedSortedMapped = map (\(i, date) -> (logLines !! i)) logLinesWithIndexFilteredMappedSorted
-    let logLinesWithIndexFilteredMappedSortedMappedFiltered = filter (\line -> "ERROR" `isInfixOf` line) logLinesWithIndexFilteredMappedSortedMapped
-    let logLinesWithIndexFilteredMappedSortedMappedFilteredMapped = map (\line -> (words line) !! 1) logLinesWithIndexFilteredMappedSortedMappedFiltered
-    let logLinesWithIndexFilteredMappedSortedMappedFilteredMappedFiltered = filter (\date -> "2018-06-17" `isInfixOf` date) logLinesWithIndexFilteredMappedSortedMappedFilteredMapped
-    let logLinesWithIndexFilteredMappedSortedMappedFilteredMappedFilteredMapped = map (\date -> (words date) !! 1) logLinesWithIndexFilteredMappedSortedMappedFilteredMappedFiltered
+    let logLinesWithIndexFiltered = filter (\(_, x) -> any (`isInfixOf` x) getDefaultTypes) logLinesWithIndex
+    
+    forM_ logLinesWithIndexFiltered $ \(i, line) -> do
+        putStrLn $ show i ++ " - " ++ line
 
-    -- Println each element logLinesWithIndexFiltered
-    mapM_ print logLinesWithIndexFiltered
-    --print logLinesWithIndexFiltered
-    print logLinesWithIndexFilteredMapped
+
+getDefaultTypes :: [String]
+getDefaultTypes = ["WARNING", "ERROR", "NOTICE"]
