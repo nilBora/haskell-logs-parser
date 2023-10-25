@@ -17,3 +17,9 @@ main = do
 
 getDefaultTypes :: [String]
 getDefaultTypes = ["WARNING", "ERROR", "NOTICE"]
+
+colorRed :: String -> String
+colorRed = colorize "31"
+
+colorize :: String -> String -> String
+colorize color text = "\x1b[" ++ color ++ "m" ++ text ++ "\x1b[0m"
